@@ -124,6 +124,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       ]
     },
     { icon: Briefcase, label: 'Jobs', href: '/admin/jobs' },
+    { icon: Wrench, label: 'Equipment & Permits', href: '/admin/equipment-permits' },
+    { icon: TrendingUp, label: 'Job Profitability', href: '/admin/job-profitability' },
     {
       icon: UserCircle,
       label: 'HR Management',
@@ -134,6 +136,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         { label: 'Leave Management', href: '/admin/hr/leave-management', icon: Calendar },
         { label: 'Payroll', href: '/admin/hr/payroll', icon: DollarSign },
         { label: 'Performance Dashboard', href: '/admin/hr/performance-dashboard', icon: BarChart3 },
+        { label: 'Feedback & Complaints', href: '/admin/employee-feedback', icon: MessageSquare },
       ]
     },
     {
@@ -182,10 +185,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-12'} border-r bg-card hidden lg:flex flex-col sticky top-0 h-screen shadow-sm transition-all duration-300 overflow-hidden`}>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 lg:hidden z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop Only */}
+      <aside className="w-64 border-r bg-card hidden lg:flex flex-col sticky top-0 h-screen shadow-sm overflow-hidden">
         <div className="p-4 border-b flex items-center justify-between">
-          <div className={`${sidebarOpen ? 'flex' : 'hidden'} items-center gap-3`}>
+          <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/30">
               H
             </div>
@@ -194,17 +205,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">Hygiene ERP</span>
             </div>
           </div>
-          <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-accent rounded-lg transition-all duration-200 group"
-            title={sidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
-          >
-            <Menu className={`h-5 w-5 text-muted-foreground group-hover:text-blue-600 transition-transform duration-200 ${sidebarOpen ? 'rotate-90' : ''}`} />
-          </button>
         </div>
         
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
-          <p className={`px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 ${sidebarOpen ? '' : 'hidden'}`}>Main Menu</p>
+          <p className="px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Main Menu</p>
           {menuItems.map((item) => {
             const isActive = pathname === item.href
             const hasSubmenu = 'submenu' in item
@@ -239,17 +243,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
                           : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                       }`}
-                      title={sidebarOpen ? '' : item.label}
+                      title=""
                     >
                       <item.icon className={`h-5 w-5 transition-colors shrink-0 ${
                         isSubmenuActive ? 'text-white' : 'text-muted-foreground group-hover:text-blue-600'
                       }`} />
-                      <span className={`flex-1 text-left transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>{item.label}</span>
-                      {sidebarOpen && <ChevronDown className={`h-4 w-4 transition-transform shrink-0 ${
+                      <span className="flex-1 text-left">{item.label}</span>
+                      <ChevronDown className={`h-4 w-4 transition-transform shrink-0 ${
                         (isCrmItem && crmOpen) || (isSurveysItem && surveysOpen) || (isQuotationsItem && quotationsOpen) || (isHrItem && hrOpen) || (isFinanceItem && financeOpen) || (isMeetingsItem && meetingsOpen) || (isAdminMgmtItem && adminMgmtOpen) || (isAiItem && aiOpen) || (item.label === 'Product Management' && productsOpen) ? 'rotate-180' : ''
-                      }`} />}
+                      }`} />
                     </button>
-                    {sidebarOpen && ((isCrmItem && crmOpen) || (isSurveysItem && surveysOpen) || (isQuotationsItem && quotationsOpen) || (isHrItem && hrOpen) || (isFinanceItem && financeOpen) || (isMeetingsItem && meetingsOpen) || (isAdminMgmtItem && adminMgmtOpen) || (isAiItem && aiOpen) || (item.label === 'Product Management' && productsOpen)) && (
+                    {((isCrmItem && crmOpen) || (isSurveysItem && surveysOpen) || (isQuotationsItem && quotationsOpen) || (isHrItem && hrOpen) || (isFinanceItem && financeOpen) || (isMeetingsItem && meetingsOpen) || (isAdminMgmtItem && adminMgmtOpen) || (isAiItem && aiOpen) || (item.label === 'Product Management' && productsOpen)) && (
                       <div className="ml-2 mt-1 space-y-1 border-l-2 border-muted pl-2">
                         {('submenu' in item && item.submenu) && item.submenu.map((subitem: any) => {
                           const isSubActive = pathname === subitem.href
@@ -286,13 +290,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
                         : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                     }`}
-                    title={sidebarOpen ? '' : item.label}
+                    title=""
                   >
                     <item.icon className={`h-5 w-5 transition-colors shrink-0 ${
                       isActive ? 'text-white' : 'text-muted-foreground group-hover:text-blue-600'
                     }`} />
-                    <span className={`flex-1 text-left transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden'}`}>{item.label}</span>
-                    {isActive && sidebarOpen && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>}
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {isActive && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>}
                   </Link>
                 )}
               </div>
@@ -301,45 +305,123 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="p-4 border-t space-y-4">
-          <div className={`bg-muted/50 rounded-2xl p-4 ${sidebarOpen ? '' : 'p-2'}`}>
-            {sidebarOpen ? (
-              <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-full bg-linear-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
-                    AD
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate">Admin User</p>
-                    <p className="text-xs text-muted-foreground truncate">admin@homeware.ae</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={handleSignOut}
-                  disabled={isSigningOut}
-                  className="flex w-full items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-100 dark:border-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  {isSigningOut ? 'Signing Out...' : 'Sign Out'}
-                </button>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-linear-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-blue-500/30" title="Admin User">
-                  AD
-                </div>
-                <button 
-                  onClick={handleSignOut}
-                  disabled={isSigningOut}
-                  className="p-2 rounded-lg text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={isSigningOut ? 'Signing Out...' : 'Sign Out'}
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
+          <div className="bg-muted/50 rounded-2xl p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-10 w-10 rounded-full bg-linear-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30">
+                AD
               </div>
-            )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold truncate">Admin User</p>
+                <p className="text-xs text-muted-foreground truncate">admin@homeware.ae</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="flex w-full items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-100 dark:border-red-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+            </button>
           </div>
         </div>
       </aside>
+
+      {/* Mobile Sidebar - Slide-out menu */}
+      {sidebarOpen && (
+        <div className="fixed top-20 left-0 w-64 h-screen bg-card border-r border-slate-200 z-40 overflow-y-auto lg:hidden">
+          <div className="p-4 space-y-1.5">
+            <p className="px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Main Menu</p>
+            {menuItems.map((item) => {
+              const isActive = pathname === item.href
+              const hasSubmenu = 'submenu' in item
+              const isSubmenuActive = hasSubmenu && pathname.startsWith(item.href)
+              const isCrmItem = item.label === 'CRM'
+              const isSurveysItem = item.label === 'Surveys'
+              const isQuotationsItem = item.label === 'Quotations'
+              const isHrItem = item.label === 'HR Management'
+              const isFinanceItem = item.label === 'Finance'
+              const isMeetingsItem = item.label === 'Meetings'
+              const isAdminMgmtItem = item.label === 'Admin Management'
+              const isAiItem = item.label === 'AI Command Center'
+              
+              return (
+                <div key={item.label}>
+                  {hasSubmenu ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          if (isCrmItem) setCrmOpen(!crmOpen)
+                          if (isSurveysItem) setSurveysOpen(!surveysOpen)
+                          if (isQuotationsItem) setQuotationsOpen(!quotationsOpen)
+                          if (isHrItem) setHrOpen(!hrOpen)
+                          if (isFinanceItem) setFinanceOpen(!financeOpen)
+                          if (isMeetingsItem) setMeetingsOpen(!meetingsOpen)
+                          if (isAdminMgmtItem) setAdminMgmtOpen(!adminMgmtOpen)
+                          if (isAiItem) setAiOpen(!aiOpen)
+                          if (item.label === 'Product Management') setProductsOpen(!productsOpen)
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group ${
+                          isSubmenuActive 
+                            ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
+                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                        }`}
+                      >
+                        <item.icon className={`h-5 w-5 transition-colors shrink-0 ${
+                          isSubmenuActive ? 'text-white' : 'text-muted-foreground group-hover:text-blue-600'
+                        }`} />
+                        <span className="flex-1 text-left">{item.label}</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform shrink-0 ${
+                          (isCrmItem && crmOpen) || (isSurveysItem && surveysOpen) || (isQuotationsItem && quotationsOpen) || (isHrItem && hrOpen) || (isFinanceItem && financeOpen) || (isMeetingsItem && meetingsOpen) || (isAdminMgmtItem && adminMgmtOpen) || (isAiItem && aiOpen) || (item.label === 'Product Management' && productsOpen) ? 'rotate-180' : ''
+                        }`} />
+                      </button>
+                      {((isCrmItem && crmOpen) || (isSurveysItem && surveysOpen) || (isQuotationsItem && quotationsOpen) || (isHrItem && hrOpen) || (isFinanceItem && financeOpen) || (isMeetingsItem && meetingsOpen) || (isAdminMgmtItem && adminMgmtOpen) || (isAiItem && aiOpen) || (item.label === 'Product Management' && productsOpen)) && (
+                        <div className="ml-2 mt-1 space-y-1 border-l-2 border-muted pl-2">
+                          {('submenu' in item && item.submenu) && item.submenu.map((subitem: any) => {
+                            const isSubActive = pathname === subitem.href
+                            return (
+                              <Link
+                                key={subitem.label}
+                                href={subitem.href}
+                                onClick={() => setSidebarOpen(false)}
+                                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 group ${
+                                  isSubActive 
+                                    ? 'bg-pink-100 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300' 
+                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                }`}
+                              >
+                                <subitem.icon className={`h-4 w-4 ${
+                                  isSubActive ? 'text-pink-600' : 'text-muted-foreground group-hover:text-pink-600'
+                                }`} />
+                                <span className="flex-1">{subitem.label}</span>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 group ${
+                        isActive 
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      }`}
+                    >
+                      <item.icon className={`h-5 w-5 transition-colors shrink-0 ${
+                        isActive ? 'text-white' : 'text-muted-foreground group-hover:text-blue-600'
+                      }`} />
+                      <span className="flex-1 text-left">{item.label}</span>
+                    </Link>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">

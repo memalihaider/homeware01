@@ -26,7 +26,12 @@ import {
   Briefcase,
   MapPin,
   Phone,
-  Mail
+  Mail,
+  Globe,
+  File,
+  AlertTriangle,
+  CheckCheck,
+  Camera
 } from 'lucide-react'
 
 interface Task {
@@ -77,8 +82,9 @@ interface Bonus {
 
 export default function EmployeeDashboard() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'attendance' | 'payroll' | 'bonuses'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'tasks' | 'attendance' | 'payroll' | 'bonuses' | 'visa' | 'documents'>('overview')
   const [employee, setEmployee] = useState<any>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Mock employee data based on login
   useEffect(() => {
@@ -106,9 +112,52 @@ export default function EmployeeDashboard() {
         profileImage: '/api/placeholder/100/100',
         salary: {
           basic: 8500,
+          housing: 1000,
+          food: 200,
           allowances: 1200,
           total: 9700
-        }
+        },
+        visa: {
+          visaNumber: 'AE1234567',
+          issueDate: '2023-01-15',
+          expiryDate: '2026-01-14',
+          sponsorName: 'Homeware LLC',
+          status: 'active'
+        },
+        documents: [
+          {
+            id: '1',
+            fileName: 'Passport_JohnDoe',
+            fileType: 'pdf',
+            uploadDate: '2023-01-15',
+            documentType: 'passport',
+            status: 'valid',
+            fileUrl: '#'
+          },
+          {
+            id: '2',
+            fileName: 'Visa_Employment_2023',
+            fileType: 'pdf',
+            uploadDate: '2023-01-15',
+            expiryDate: '2026-01-14',
+            documentType: 'visa',
+            status: 'valid',
+            fileUrl: '#'
+          }
+        ],
+        bonuses: [
+          {
+            id: 1,
+            title: 'Performance Bonus - Q4',
+            amount: 500,
+            type: 'performance',
+            date: '2025-12-15',
+            month: 'December',
+            year: 2025,
+            description: 'Outstanding performance',
+            status: 'paid'
+          }
+        ]
       },
       'EMP002': {
         id: 'EMP002',
@@ -123,6 +172,8 @@ export default function EmployeeDashboard() {
         profileImage: '/api/placeholder/100/100',
         salary: {
           basic: 12000,
+          housing: 1500,
+          food: 300,
           allowances: 1800,
           total: 13800
         }
@@ -411,10 +462,19 @@ export default function EmployeeDashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Toggle menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
@@ -435,7 +495,7 @@ export default function EmployeeDashboard() {
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+                className="hidden sm:flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">Logout</span>
@@ -445,185 +505,452 @@ export default function EmployeeDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 sticky top-24">
-              {/* Profile Card */}
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 lg:hidden z-30"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Slide-out menu (Mobile only) */}
+      {sidebarOpen && (
+        <div
+          className="fixed top-16 left-0 w-64 h-screen bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out z-40 overflow-y-auto"
+        >
+        <div className="p-6">
+          {/* Profile Card */}
+          <div className="text-center mb-6">
+            <div className="relative mb-4">
+              <div className="w-20 h-20 bg-blue-100 rounded-full mx-auto flex items-center justify-center overflow-hidden">
+                {employee.profileImage && employee.profileImage !== '/api/placeholder/100/100' ? (
+                  <img
+                    src={employee.profileImage}
+                    alt={employee.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
                   <User className="w-10 h-10 text-blue-600" />
-                </div>
-                <h3 className="font-bold text-slate-900">{employee.name}</h3>
-                <p className="text-sm text-slate-500">{employee.position}</p>
-                <p className="text-xs text-slate-400">{employee.department}</p>
+                )}
               </div>
+              <button
+                onClick={() => document.getElementById('profile-picture-input')?.click()}
+                className="absolute bottom-0 right-1/2 translate-x-10 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                title="Update profile picture"
+              >
+                <Camera className="w-3 h-3 text-white" />
+              </button>
+            </div>
+            <h3 className="font-bold text-slate-900">{employee.name}</h3>
+            <p className="text-sm text-slate-500">{employee.position}</p>
+            <p className="text-xs text-slate-400">{employee.department}</p>
+          </div>
 
-              {/* Navigation */}
-              <nav className="space-y-2">
-                {[
-                  { id: 'overview', label: 'Overview', icon: BarChart3 },
-                  { id: 'tasks', label: 'My Tasks', icon: CheckCircle },
-                  { id: 'attendance', label: 'Attendance', icon: Clock },
-                  { id: 'payroll', label: 'Payroll', icon: Wallet },
-                  { id: 'bonuses', label: 'Bonuses', icon: Award }
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id as any)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${
-                      activeTab === item.id
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                    }`}
-                  >
-                    <item.icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                ))}
-              </nav>
+          {/* Navigation */}
+          <nav className="space-y-2 mb-6">
+            {[
+              { id: 'overview', label: 'Overview', icon: BarChart3 },
+              { id: 'profile', label: 'My Profile', icon: User },
+              { id: 'tasks', label: 'My Tasks', icon: CheckCircle },
+              { id: 'attendance', label: 'Attendance', icon: Clock },
+              { id: 'payroll', label: 'Payroll', icon: Wallet },
+              { id: 'bonuses', label: 'Bonuses', icon: Award },
+              { id: 'visa', label: 'Visa & Status', icon: Globe },
+              { id: 'documents', label: 'Documents', icon: File }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id as any)
+                  setSidebarOpen(false)
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${
+                  activeTab === item.id
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </button>
+            ))}
+          </nav>
 
-              {/* Quick Stats */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="text-lg font-bold text-slate-900">{taskStats.completed}</div>
-                    <div className="text-xs text-slate-500">Tasks Done</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-slate-900">{attendanceStats.thisMonth}</div>
-                    <div className="text-xs text-slate-500">Days Present</div>
-                  </div>
-                </div>
+          {/* Quick Stats */}
+          <div className="pt-6 border-t border-slate-200">
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-slate-900">{taskStats.completed}</div>
+                <div className="text-xs text-slate-500">Tasks Done</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-slate-900">{attendanceStats.thisMonth}</div>
+                <div className="text-xs text-slate-500">Days Present</div>
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {activeTab === 'overview' && (
-              <div className="space-y-8">
-                {/* Welcome Section */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
-                  <h2 className="text-2xl font-bold mb-2">Welcome back, {employee.name}!</h2>
-                  <p className="text-blue-100 mb-4">Here's your dashboard overview for today.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white/10 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="text-sm font-medium">Active Tasks</span>
-                      </div>
-                      <div className="text-2xl font-bold">{taskStats.inProgress + taskStats.overdue}</div>
+          {/* Mobile Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="lg:hidden w-full flex items-center gap-2 px-3 py-2 mt-6 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="text-sm font-medium">Logout</span>
+          </button>
+        </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block fixed left-0 top-16 w-64 h-screen bg-white border-r border-slate-200 overflow-y-auto">
+        <div className="p-6 sticky top-0 bg-white">
+          {/* Profile Card */}
+          <div className="text-center mb-6">
+            <div className="relative mb-4">
+              <div className="w-20 h-20 bg-blue-100 rounded-full mx-auto flex items-center justify-center overflow-hidden">
+                {employee.profileImage && employee.profileImage !== '/api/placeholder/100/100' ? (
+                  <img
+                    src={employee.profileImage}
+                    alt={employee.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-10 h-10 text-blue-600" />
+                )}
+              </div>
+              <button
+                onClick={() => document.getElementById('profile-picture-input')?.click()}
+                className="absolute bottom-0 right-1/2 translate-x-10 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                title="Update profile picture"
+              >
+                <Camera className="w-3 h-3 text-white" />
+              </button>
+            </div>
+            <h3 className="font-bold text-slate-900">{employee.name}</h3>
+            <p className="text-sm text-slate-500">{employee.position}</p>
+            <p className="text-xs text-slate-400">{employee.department}</p>
+          </div>
+
+          {/* Navigation */}
+          <nav className="space-y-2">
+            {[
+              { id: 'overview', label: 'Overview', icon: BarChart3 },
+              { id: 'profile', label: 'My Profile', icon: User },
+              { id: 'tasks', label: 'My Tasks', icon: CheckCircle },
+              { id: 'attendance', label: 'Attendance', icon: Clock },
+              { id: 'payroll', label: 'Payroll', icon: Wallet },
+              { id: 'bonuses', label: 'Bonuses', icon: Award },
+              { id: 'visa', label: 'Visa & Status', icon: Globe },
+              { id: 'documents', label: 'Documents', icon: File }
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all ${
+                  activeTab === item.id
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Quick Stats */}
+          <div className="mt-6 pt-6 border-t border-slate-200">
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-slate-900">{taskStats.completed}</div>
+                <div className="text-xs text-slate-500">Tasks Done</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-slate-900">{attendanceStats.thisMonth}</div>
+                <div className="text-xs text-slate-500">Days Present</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="lg:ml-64">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {activeTab === 'overview' && (
+            <div className="space-y-8">
+              {/* Welcome Section */}
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
+                <h2 className="text-2xl font-bold mb-2">Welcome back, {employee.name}!</h2>
+                <p className="text-blue-100 mb-4">Here's your dashboard overview for today.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white/10 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="text-sm font-medium">Active Tasks</span>
                     </div>
-                    <div className="bg-white/10 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm font-medium">Hours This Week</span>
-                      </div>
-                      <div className="text-2xl font-bold">{attendanceStats.totalHours.toFixed(1)}</div>
+                    <div className="text-2xl font-bold">{taskStats.inProgress + taskStats.overdue}</div>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4" />
+                      <span className="text-sm font-medium">Hours This Week</span>
                     </div>
-                    <div className="bg-white/10 rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <DollarSign className="w-4 h-4" />
-                        <span className="text-sm font-medium">Next Payroll</span>
-                      </div>
-                      <div className="text-2xl font-bold">Dec 28</div>
+                    <div className="text-2xl font-bold">{attendanceStats.totalHours.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-white/10 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4" />
+                      <span className="text-sm font-medium">Next Payroll</span>
                     </div>
+                    <div className="text-2xl font-bold">Dec 28</div>
                   </div>
                 </div>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <button
-                    onClick={() => setActiveTab('tasks')}
-                    className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                        <CheckCircle className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">My Tasks</h3>
-                        <p className="text-xs text-slate-500">Track progress</p>
-                      </div>
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <button
+                  onClick={() => setActiveTab('tasks')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">{taskStats.total}</div>
-                    <div className="text-xs text-slate-500 mt-1">{taskStats.completed} completed</div>
-                  </button>
+                    <div>
+                      <h3 className="font-bold text-slate-900">My Tasks</h3>
+                      <p className="text-xs text-slate-500">Track progress</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{taskStats.total}</div>
+                  <div className="text-xs text-slate-500 mt-1">{taskStats.completed} completed</div>
+                </button>
 
-                  <button
-                    onClick={() => setActiveTab('attendance')}
-                    className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                        <Clock className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">Attendance</h3>
-                        <p className="text-xs text-slate-500">Time tracking</p>
-                      </div>
+                <button
+                  onClick={() => setActiveTab('attendance')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                      <Clock className="w-5 h-5 text-green-600" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">{attendanceStats.thisMonth}</div>
-                    <div className="text-xs text-slate-500 mt-1">days this month</div>
-                  </button>
+                    <div>
+                      <h3 className="font-bold text-slate-900">Attendance</h3>
+                      <p className="text-xs text-slate-500">Time tracking</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">{attendanceStats.thisMonth}</div>
+                  <div className="text-xs text-slate-500 mt-1">days this month</div>
+                </button>
 
-                  <button
-                    onClick={() => setActiveTab('payroll')}
-                    className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                        <Wallet className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">Payroll</h3>
-                        <p className="text-xs text-slate-500">Salary details</p>
-                      </div>
+                <button
+                  onClick={() => setActiveTab('payroll')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                      <Wallet className="w-5 h-5 text-purple-600" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">AED {employee.salary.total.toLocaleString()}</div>
-                    <div className="text-xs text-slate-500 mt-1">monthly salary</div>
-                  </button>
+                    <div>
+                      <h3 className="font-bold text-slate-900">Payroll</h3>
+                      <p className="text-xs text-slate-500">Salary details</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">AED {employee.salary.total.toLocaleString()}</div>
+                  <div className="text-xs text-slate-500 mt-1">monthly salary</div>
+                </button>
 
-                  <button
-                    onClick={() => setActiveTab('bonuses')}
-                    className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                        <Award className="w-5 h-5 text-orange-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900">Bonuses</h3>
-                        <p className="text-xs text-slate-500">Rewards earned</p>
-                      </div>
+                <button
+                  onClick={() => setActiveTab('bonuses')}
+                  className="bg-white p-6 rounded-2xl border border-slate-200 hover:shadow-md transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+                      <Award className="w-5 h-5 text-orange-600" />
                     </div>
-                    <div className="text-2xl font-bold text-slate-900">AED {bonuses.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0).toLocaleString()}</div>
-                    <div className="text-xs text-slate-500 mt-1">earned this year</div>
-                  </button>
+                    <div>
+                      <h3 className="font-bold text-slate-900">Bonuses</h3>
+                      <p className="text-xs text-slate-500">Rewards earned</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">AED {bonuses.filter(b => b.status === 'paid').reduce((sum, b) => sum + b.amount, 0).toLocaleString()}</div>
+                  <div className="text-xs text-slate-500 mt-1">earned this year</div>
+                </button>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-4">Recent Activity</h3>
+                <div className="space-y-4">
+                  {tasks.slice(0, 3).map((task) => (
+                    <div key={task.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
+                      <div className={`w-2 h-2 rounded-full ${
+                        task.status === 'completed' ? 'bg-green-500' :
+                        task.status === 'in-progress' ? 'bg-blue-500' :
+                        task.status === 'overdue' ? 'bg-red-500' : 'bg-yellow-500'
+                      }`}></div>
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-900">{task.title}</div>
+                        <div className="text-sm text-slate-500">{task.project}</div>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${getTaskStatusColor(task.status)}`}>
+                        {task.status.replace('-', ' ')}
+                      </span>
+                    </div>
+                  ))}
                 </div>
+              </div>
+              </div>
+            )}
 
-                {/* Recent Activity */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">Recent Activity</h3>
-                  <div className="space-y-4">
-                    {tasks.slice(0, 3).map((task) => (
-                      <div key={task.id} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg">
-                        <div className={`w-2 h-2 rounded-full ${
-                          task.status === 'completed' ? 'bg-green-500' :
-                          task.status === 'in-progress' ? 'bg-blue-500' :
-                          task.status === 'overdue' ? 'bg-red-500' : 'bg-yellow-500'
-                        }`}></div>
-                        <div className="flex-1">
-                          <div className="font-medium text-slate-900">{task.title}</div>
-                          <div className="text-sm text-slate-500">{task.project}</div>
+            {activeTab === 'profile' && (
+              <div className="space-y-8">
+                <div className="bg-white border border-slate-200 rounded-2xl p-8">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-6">My Profile</h2>
+
+                  {/* Profile Picture Section */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4">Profile Picture</h3>
+                    <div className="flex items-center gap-6">
+                      <div className="relative">
+                        <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                          {employee.profileImage && employee.profileImage !== '/api/placeholder/100/100' ? (
+                            <img
+                              src={employee.profileImage}
+                              alt={employee.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-12 h-12 text-blue-600" />
+                          )}
                         </div>
-                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${getTaskStatusColor(task.status)}`}>
-                          {task.status.replace('-', ' ')}
-                        </span>
                       </div>
-                    ))}
+                      <div className="flex-1">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Upload New Picture</label>
+                            <input
+                              id="profile-picture-input"
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  const reader = new FileReader()
+                                  reader.onload = (e) => {
+                                    const result = e.target?.result as string
+                                    // In a real app, you'd upload to a server here
+                                    // For now, we'll just update the local state
+                                    setEmployee((prev: any) => prev ? {
+                                      ...prev,
+                                      profileImage: result
+                                    } : prev)
+                                  }
+                                  reader.readAsDataURL(file)
+                                }
+                              }}
+                              className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Recommended: Square image, at least 200x200px. Max size: 5MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Personal Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+                      <input
+                        type="text"
+                        value={employee.name}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Employee ID</label>
+                      <input
+                        type="text"
+                        value={employee.id}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Position</label>
+                      <input
+                        type="text"
+                        value={employee.position}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
+                      <input
+                        type="text"
+                        value={employee.department}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={employee.email}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+                      <input
+                        type="tel"
+                        value={employee.phone}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Join Date</label>
+                      <input
+                        type="text"
+                        value={new Date(employee.joinDate).toLocaleDateString()}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
+                      <input
+                        type="text"
+                        value={employee.location}
+                        readOnly
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Manager Information */}
+                  <div className="mt-6 pt-6 border-t border-slate-200">
+                    <h4 className="text-lg font-bold text-slate-900 mb-4">Manager Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Manager Name</label>
+                        <input
+                          type="text"
+                          value={employee.manager}
+                          readOnly
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -921,7 +1248,174 @@ export default function EmployeeDashboard() {
                 </div>
               </div>
             )}
-          </div>
+
+            {activeTab === 'visa' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-slate-900">Visa & Status Information</h2>
+                </div>
+
+                {employee.visa ? (
+                  <>
+                    {/* Visa Status Alert */}
+                    {(() => {
+                      const expiryDate = new Date(employee.visa.expiryDate)
+                      const today = new Date()
+                      const daysRemaining = Math.floor((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                      
+                      return daysRemaining <= 30 && daysRemaining > 0 ? (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 flex items-start gap-4">
+                          <AlertTriangle className="w-6 h-6 text-yellow-600 shrink-0 mt-1" />
+                          <div>
+                            <h3 className="font-bold text-yellow-900 mb-1">Visa Expiring Soon</h3>
+                            <p className="text-yellow-800">Your visa will expire in <span className="font-bold">{daysRemaining} days</span> on {new Date(employee.visa.expiryDate).toLocaleDateString()}. Please contact HR to renew your visa.</p>
+                          </div>
+                        </div>
+                      ) : daysRemaining < 0 ? (
+                        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 flex items-start gap-4">
+                          <AlertTriangle className="w-6 h-6 text-red-600 shrink-0 mt-1" />
+                          <div>
+                            <h3 className="font-bold text-red-900 mb-1">Visa Expired</h3>
+                            <p className="text-red-800">Your visa expired on {new Date(employee.visa.expiryDate).toLocaleDateString()}. Contact HR immediately for renewal procedures.</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex items-start gap-4">
+                          <CheckCheck className="w-6 h-6 text-green-600 shrink-0 mt-1" />
+                          <div>
+                            <h3 className="font-bold text-green-900 mb-1">Visa Active</h3>
+                            <p className="text-green-800">Your visa is valid until {new Date(employee.visa.expiryDate).toLocaleDateString()}.</p>
+                          </div>
+                        </div>
+                      )
+                    })()}
+
+                    {/* Visa Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <Globe className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-900">Visa Number</h3>
+                            <p className="text-sm text-slate-500">Unique identifier</p>
+                          </div>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900">{employee.visa.visaNumber}</div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <Briefcase className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-900">Sponsor</h3>
+                            <p className="text-sm text-slate-500">Visa sponsor</p>
+                          </div>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900">{employee.visa.sponsorName}</div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-900">Issue Date</h3>
+                            <p className="text-sm text-slate-500">When visa was issued</p>
+                          </div>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900">{new Date(employee.visa.issueDate).toLocaleDateString()}</div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-red-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-900">Expiry Date</h3>
+                            <p className="text-sm text-slate-500">When visa expires</p>
+                          </div>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900">{new Date(employee.visa.expiryDate).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-slate-50 rounded-2xl p-6 text-center">
+                    <Globe className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-600">Visa information not available. Please contact HR.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'documents' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold text-slate-900">My Documents</h2>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-slate-900">{employee.documents?.length || 0}</div>
+                    <div className="text-sm text-slate-500">Documents on file</div>
+                  </div>
+                </div>
+
+                {employee.documents && employee.documents.length > 0 ? (
+                  <div className="space-y-4">
+                    {employee.documents.map((doc: any) => {
+                      const docStatus = doc.expiryDate ? (() => {
+                        const expiry = new Date(doc.expiryDate)
+                        const today = new Date()
+                        const daysUntilExpiry = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+                        if (daysUntilExpiry < 0) return 'expired'
+                        if (daysUntilExpiry <= 30) return 'expiring-soon'
+                        return 'valid'
+                      })() : 'valid'
+
+                      return (
+                        <div key={doc.id} className="bg-white border border-slate-200 rounded-2xl p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <File className="w-6 h-6 text-blue-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-slate-900">{doc.fileName}</h3>
+                                <p className="text-sm text-slate-500">{doc.documentType} • Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                              docStatus === 'valid' ? 'bg-green-100 text-green-700' :
+                              docStatus === 'expiring-soon' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {docStatus === 'valid' ? 'Valid' : docStatus === 'expiring-soon' ? 'Expiring Soon' : 'Expired'}
+                            </span>
+                          </div>
+                          
+                          {doc.expiryDate && (
+                            <div className="border-t border-slate-200 pt-4">
+                              <p className="text-sm text-slate-600">
+                                Expires: <span className="font-bold">{new Date(doc.expiryDate).toLocaleDateString()}</span>
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-2xl p-6 text-center">
+                    <File className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-600">No documents on file yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
         </div>
       </div>
     </div>

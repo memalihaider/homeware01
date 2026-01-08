@@ -129,7 +129,7 @@ function JobDetailContent() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-2 p-1 bg-white border border-gray-300 rounded-2xl w-fit shadow-sm">
+      <div className="grid grid-cols-4 gap-2 p-1 bg-white border border-gray-300 rounded-2xl shadow-sm">
         {[
           { id: 'overview', label: 'Overview', icon: FileText },
           { id: 'pre-execution', label: 'Pre-Execution', icon: ClipboardCheck },
@@ -139,14 +139,14 @@ function JobDetailContent() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            className={`flex flex-col items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === tab.id 
                 ? 'bg-indigo-600 text-white shadow-md' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
             <tab.icon className="w-4 h-4" />
-            {tab.label}
+            <span className="line-clamp-2 text-center">{tab.label}</span>
           </button>
         ))}
       </div>
