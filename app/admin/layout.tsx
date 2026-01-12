@@ -106,12 +106,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     {
       icon: FileText,
       label: 'Quotations',
-      href: '/admin/quotations',
-      submenu: [
-        { label: 'Builder', href: '/admin/quotations/builder', icon: FileText },
-        { label: 'Preview', href: '/admin/quotations/preview', icon: Eye },
-        { label: 'Approvals', href: '/admin/quotations/approval', icon: CheckCircle },
-      ]
+      href: '/admin/quotations/complete',
     },
     {
       icon: Wrench,

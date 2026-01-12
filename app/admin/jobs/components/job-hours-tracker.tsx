@@ -111,7 +111,8 @@ export function JobHoursTracker() {
             employeeId: parseInt(newEntry.employeeId),
             employeeName: newEntry.employeeName,
             date: newEntry.date,
-            hoursWorked: newEntry.hoursWorked
+            hoursWorked: newEntry.hoursWorked,
+            notes: newEntry.notes
           }
           const updatedEntries = [...job.entries, newEntryObj]
           const totalActualHours = updatedEntries.reduce((sum, e) => sum + e.hoursWorked, 0)

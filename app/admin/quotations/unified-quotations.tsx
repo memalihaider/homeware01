@@ -6,7 +6,7 @@ import {
   ChevronDown, Check, AlertCircle, CheckCircle, X, Mail, Phone, FileText, 
   DollarSign, Calendar, User, Building2, MapPin, Percent, Tag, ShoppingCart, 
   Sparkles, Settings, FileCheck, Clock, TrendingUp, Copy, MessageSquare, 
-  MessageCircle, FileArrowDown, ArrowRight
+  MessageCircle, Save, ArrowRight
 } from 'lucide-react'
 
 interface Quotation {

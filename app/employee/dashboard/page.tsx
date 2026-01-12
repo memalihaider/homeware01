@@ -82,7 +82,7 @@ interface Bonus {
 
 export default function EmployeeDashboard() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'tasks' | 'attendance' | 'payroll' | 'bonuses' | 'visa' | 'documents'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'profile' | 'tasks' | 'attendance' | 'payroll' | 'bonuses' | 'visa' | 'documents'>('profile')
   const [employee, setEmployee] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -109,7 +109,7 @@ export default function EmployeeDashboard() {
         manager: 'Sarah Johnson',
         phone: '+971 50 123 4567',
         location: 'Dubai Main Office',
-        profileImage: '/api/placeholder/100/100',
+        profileImage: null,
         salary: {
           basic: 8500,
           housing: 1000,
@@ -169,7 +169,7 @@ export default function EmployeeDashboard() {
         manager: 'Mike Wilson',
         phone: '+971 50 987 6543',
         location: 'Dubai Main Office',
-        profileImage: '/api/placeholder/100/100',
+        profileImage: null,
         salary: {
           basic: 12000,
           housing: 1500,
@@ -188,7 +188,7 @@ export default function EmployeeDashboard() {
         manager: 'David Brown',
         phone: '+971 50 555 1234',
         location: 'Dubai Main Office',
-        profileImage: '/api/placeholder/100/100',
+        profileImage: null,
         salary: {
           basic: 18000,
           allowances: 2500,
@@ -205,7 +205,7 @@ export default function EmployeeDashboard() {
         manager: 'Emma Davis',
         phone: '+971 50 777 8888',
         location: 'Dubai Main Office',
-        profileImage: '/api/placeholder/100/100',
+        profileImage: null,
         salary: {
           basic: 9500,
           allowances: 1400,
@@ -535,7 +535,7 @@ export default function EmployeeDashboard() {
               </div>
               <button
                 onClick={() => document.getElementById('profile-picture-input')?.click()}
-                className="absolute bottom-0 right-1/2 translate-x-10 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                className="absolute bottom-0 right-2 translate-x-10 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
                 title="Update profile picture"
               >
                 <Camera className="w-3 h-3 text-white" />
@@ -621,7 +621,7 @@ export default function EmployeeDashboard() {
               </div>
               <button
                 onClick={() => document.getElementById('profile-picture-input')?.click()}
-                className="absolute bottom-0 right-1/2 translate-x-10 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                className="absolute bottom-0 right-2 translate-x-10 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
                 title="Update profile picture"
               >
                 <Camera className="w-3 h-3 text-white" />
@@ -678,28 +678,27 @@ export default function EmployeeDashboard() {
       {/* Main Content */}
       <div className="lg:ml-64">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {activeTab === 'overview' && (
             <div className="space-y-8">
               {/* Welcome Section */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
+              <div className="bg-linear-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
                 <h2 className="text-2xl font-bold mb-2">Welcome back, {employee.name}!</h2>
                 <p className="text-blue-100 mb-4">Here's your dashboard overview for today.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-white/10 rounded-xl p-4">
+                  <div className="bg-white rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <CheckCircle className="w-4 h-4" />
                       <span className="text-sm font-medium">Active Tasks</span>
                     </div>
                     <div className="text-2xl font-bold">{taskStats.inProgress + taskStats.overdue}</div>
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4">
+                  <div className="bg-white rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Clock className="w-4 h-4" />
                       <span className="text-sm font-medium">Hours This Week</span>
                     </div>
                     <div className="text-2xl font-bold">{attendanceStats.totalHours.toFixed(1)}</div>
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4">
+                  <div className="bg-white rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <DollarSign className="w-4 h-4" />
                       <span className="text-sm font-medium">Next Payroll</span>
@@ -795,16 +794,15 @@ export default function EmployeeDashboard() {
                         <div className="text-sm text-slate-500">{task.project}</div>
                       </div>
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${getTaskStatusColor(task.status)}`}>
-                        {task.status.replace('-', ' ')}
+                        {task.status.split('-').join(' ')}
                       </span>
                     </div>
                   ))}
                 </div>
               </div>
-              </div>
-            )}
+            </div>
 
-            {activeTab === 'profile' && (
+            {false && (
               <div className="space-y-8">
                 <div className="bg-white border border-slate-200 rounded-2xl p-8">
                   <h2 className="text-2xl font-bold text-slate-900 mb-6">My Profile</h2>
@@ -992,7 +990,7 @@ export default function EmployeeDashboard() {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <span className={`text-xs font-bold px-3 py-1 rounded-full ${getTaskStatusColor(task.status)}`}>
-                            {task.status.replace('-', ' ')}
+                            {task.status.split('-').join(' ')}
                           </span>
                           <span className={`text-xs font-bold px-2 py-1 rounded-full ${
                             task.priority === 'high' ? 'bg-red-100 text-red-700' :
@@ -1419,5 +1417,6 @@ export default function EmployeeDashboard() {
         </div>
       </div>
     </div>
-  )
+  </div>
+)
 }

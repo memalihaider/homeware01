@@ -1,193 +1,279 @@
 'use client'
 
-import { useState, useCallback, useMemo, Suspense } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import {
   Plus,
   Search,
-  Filter,
   Calendar,
   MapPin,
   Users,
-  Eye,
-  Edit,
-  Trash,
-  MoreHorizontal,
+  Trash2,
   CheckCircle,
   Clock,
-  AlertTriangle,
   X,
-  User,
   Briefcase,
   DollarSign,
   Camera,
-  Play
+  Play,
+  Eye,
+  Bell,
+  BellOff
 } from 'lucide-react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 
-// Import client data from quotations
-import { getQuotations } from '@/lib/quotations-data'
-
-interface NewJob {
-  title: string;
-  client: string;
-  clientId: number | null;
-  priority: string;
-  scheduledDate: string;
-  location: string;
-  teamRequired: number;
-  budget: number;
-  description: string;
-  riskLevel: string;
-  scheduledTime: string;
-  endTime: string;
-  slaDeadline: string;
-  estimatedDuration: string;
-  requiredSkills: string[];
-  permits: string[];
-  tags: string[];
-  specialInstructions: string;
-  recurring: boolean;
+interface Job {
+  id: number
+  title: string
+  client: string
+  clientId: number
+  status: 'Pending' | 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled'
+  priority: 'Low' | 'Medium' | 'High' | 'Critical'
+  scheduledDate: string | null
+  scheduledTime?: string
+  endTime?: string
+  location: string
+  teamRequired: number
+  budget: number
+  actualCost: number
+  description: string
+  riskLevel: 'Low' | 'Medium' | 'High'
+  slaDeadline?: string
+  estimatedDuration: string
+  requiredSkills: string[]
+  permits: string[]
+  tags: string[]
+  specialInstructions?: string
+  recurring: boolean
+  createdAt: string
+  updatedAt: string
+  completedAt?: string
+  executionLogs: any[]
+  assignedTo: string[]
+  reminderEnabled?: boolean
+  reminderDate?: string
+  reminderSent?: boolean
 }
 
-function JobBoardContent() {
-  const searchParams = useSearchParams()
-  const clientIdFilter = searchParams?.get('clientId')
-  
-  const [jobs, setJobs] = useState<any[]>([
-    {
-      id: 1,
-      title: 'Office Deep Cleaning - Downtown Tower',
-      client: 'Downtown Business Tower',
-      clientId: 1,
-      status: 'Scheduled',
-      priority: 'High',
-      scheduledDate: '2025-01-20',
-      location: 'Downtown, Dubai',
-      teamRequired: 4,
-      budget: 5000,
-      description: 'Complete office floor deep cleaning with window and cubicle sanitization'
-    },
-    {
-      id: 2,
-      title: 'Medical Facility Sanitization',
-      client: 'Emirates Medical Center',
-      clientId: 2,
-      status: 'Pending',
-      priority: 'Critical',
-      scheduledDate: null,
-      location: 'Al Baraha, Dubai',
-      teamRequired: 6,
-      budget: 8500,
-      description: 'Complete sanitization of medical facility including operating rooms'
-    },
-    {
-      id: 3,
-      title: 'Carpet Cleaning & Maintenance',
-      client: 'Hotel Al Manara',
-      clientId: 3,
-      status: 'In Progress',
-      priority: 'Medium',
-      scheduledDate: '2025-01-18',
-      location: 'Al Manara, Dubai',
-      teamRequired: 3,
-      budget: 3500,
-      description: 'Deep carpet cleaning for hotel lobby and guest rooms'
-    }
-  ])
+interface NewJobForm {
+  title: string
+  client: string
+  clientId: number | null
+  priority: 'Low' | 'Medium' | 'High' | 'Critical'
+  scheduledDate: string
+  scheduledTime: string
+  endTime: string
+  location: string
+  teamRequired: number
+  budget: number
+  description: string
+  riskLevel: 'Low' | 'Medium' | 'High'
+  slaDeadline: string
+  estimatedDuration: string
+  requiredSkills: string
+  permits: string
+  tags: string
+  specialInstructions: string
+  recurring: boolean
+}
 
+const INITIAL_JOBS: Job[] = [
+  {
+    id: 1,
+    title: 'Office Deep Cleaning - Downtown Tower',
+    client: 'Downtown Business Tower',
+    clientId: 1,
+    status: 'Scheduled',
+    priority: 'High',
+    scheduledDate: '2025-01-20',
+    scheduledTime: '08:00',
+    endTime: '16:00',
+    location: 'Downtown, Dubai',
+    teamRequired: 4,
+    budget: 5000,
+    actualCost: 0,
+    description: 'Complete office floor deep cleaning with window and cubicle sanitization',
+    riskLevel: 'Low',
+    slaDeadline: '2025-01-25',
+    estimatedDuration: '8 hours',
+    requiredSkills: ['General Cleaning', 'Floor Care', 'Window Cleaning'],
+    permits: ['Building Access'],
+    tags: ['Office', 'Commercial'],
+    specialInstructions: 'Use eco-friendly products only. Avoid disruption during business hours.',
+    recurring: false,
+    createdAt: '2025-01-10T10:00:00Z',
+    updatedAt: '2025-01-10T10:00:00Z',
+    executionLogs: [],
+    assignedTo: ['John Smith', 'Sarah Johnson'],
+    reminderEnabled: true,
+    reminderDate: '2025-01-19',
+    reminderSent: false
+  },
+  {
+    id: 2,
+    title: 'Medical Facility Sanitization',
+    client: 'Emirates Medical Center',
+    clientId: 2,
+    status: 'Pending',
+    priority: 'Critical',
+    scheduledDate: null,
+    location: 'Al Baraha, Dubai',
+    teamRequired: 6,
+    budget: 8500,
+    actualCost: 0,
+    description: 'Complete sanitization of medical facility including operating rooms',
+    riskLevel: 'High',
+    estimatedDuration: '12 hours',
+    requiredSkills: ['Medical Cleaning', 'Sanitization', 'HEPA Certification'],
+    permits: ['Medical Facility Access', 'Biohazard Handling'],
+    tags: ['Medical', 'Sanitization'],
+    specialInstructions: 'Requires ISO 14644 certification. Strict hygiene protocols mandatory.',
+    recurring: true,
+    createdAt: '2025-01-09T14:30:00Z',
+    updatedAt: '2025-01-11T09:00:00Z',
+    executionLogs: [],
+    assignedTo: ['Ahmed Hassan', 'Maria Garcia']
+  },
+  {
+    id: 3,
+    title: 'Carpet Cleaning & Maintenance',
+    client: 'Hotel Al Manara',
+    clientId: 3,
+    status: 'In Progress',
+    priority: 'Medium',
+    scheduledDate: '2025-01-18',
+    scheduledTime: '09:00',
+    endTime: '17:00',
+    location: 'Al Manara, Dubai',
+    teamRequired: 3,
+    budget: 3500,
+    actualCost: 2100,
+    description: 'Deep carpet cleaning for hotel lobby and guest rooms',
+    riskLevel: 'Low',
+    estimatedDuration: '8 hours',
+    requiredSkills: ['Carpet Cleaning', 'Upholstery Care'],
+    permits: ['Hotel Access'],
+    tags: ['Carpet', 'Hospitality'],
+    specialInstructions: 'Work after guest checkout. Must complete by 6 PM.',
+    recurring: false,
+    createdAt: '2025-01-15T08:00:00Z',
+    updatedAt: '2025-01-18T10:30:00Z',
+    executionLogs: [],
+    assignedTo: ['Michael Chen', 'Lisa Wong'],
+    reminderEnabled: true,
+    reminderDate: '2025-01-17',
+    reminderSent: true
+  },
+  {
+    id: 4,
+    title: 'Residential Complex Maintenance',
+    client: 'Marina Residential Tower',
+    clientId: 4,
+    status: 'Scheduled',
+    priority: 'Medium',
+    scheduledDate: '2025-01-22',
+    scheduledTime: '07:00',
+    endTime: '15:00',
+    location: 'Marina, Dubai',
+    teamRequired: 5,
+    budget: 4200,
+    actualCost: 0,
+    description: 'Common areas cleaning, pool deck sanitization, and landscaping maintenance',
+    riskLevel: 'Low',
+    estimatedDuration: '8 hours',
+    requiredSkills: ['Residential Cleaning', 'Pool Maintenance', 'Landscaping'],
+    permits: ['Residential Access'],
+    tags: ['Residential', 'Maintenance'],
+    specialInstructions: 'Coordinate with building management. Avoid disturbing residents.',
+    recurring: true,
+    createdAt: '2025-01-08T11:00:00Z',
+    updatedAt: '2025-01-08T11:00:00Z',
+    executionLogs: [],
+    assignedTo: ['James Wilson', 'Emma Davis'],
+    reminderEnabled: true,
+    reminderDate: '2025-01-21',
+    reminderSent: false
+  },
+  {
+    id: 5,
+    title: 'Industrial Floor Coating',
+    client: 'Dubai Industrial Park',
+    clientId: 5,
+    status: 'Pending',
+    priority: 'High',
+    scheduledDate: null,
+    location: 'Industrial City, Dubai',
+    teamRequired: 8,
+    budget: 12000,
+    actualCost: 0,
+    description: 'Industrial floor preparation, epoxy coating application, and quality inspection',
+    riskLevel: 'High',
+    estimatedDuration: '24 hours',
+    requiredSkills: ['Industrial Cleaning', 'Epoxy Application', 'Safety Management'],
+    permits: ['Industrial Facility Access', 'Chemical Handling'],
+    tags: ['Industrial', 'Flooring'],
+    specialInstructions: 'Requires hazmat certification. Work during off-hours. Proper ventilation essential.',
+    recurring: false,
+    createdAt: '2025-01-07T15:45:00Z',
+    updatedAt: '2025-01-11T09:15:00Z',
+    executionLogs: [],
+    assignedTo: []
+  }
+]
+
+const AVAILABLE_CLIENTS = [
+  { id: 1, name: 'Downtown Business Tower', company: 'Business Towers LLC', tier: 'Gold' },
+  { id: 2, name: 'Emirates Medical Center', company: 'Emirates Healthcare', tier: 'Platinum' },
+  { id: 3, name: 'Hotel Al Manara', company: 'Hospitality Group', tier: 'Gold' },
+  { id: 4, name: 'Marina Residential Tower', company: 'Residential Developments', tier: 'Silver' },
+  { id: 5, name: 'Dubai Industrial Park', company: 'Industrial Holdings', tier: 'Gold' }
+]
+
+export default function JobsPage() {
+  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
-  const [showNewJob, setShowNewJob] = useState(false)
-  const [showTemplates, setShowTemplates] = useState(false)
-  const [showClientList, setShowClientList] = useState(false)
-  const [showExecution, setShowExecution] = useState(false)
-  const [selectedJobForExecution, setSelectedJobForExecution] = useState<any>(null)
+  const [showNewJobModal, setShowNewJobModal] = useState(false)
+  const [showExecutionModal, setShowExecutionModal] = useState(false)
+  const [selectedJobForExecution, setSelectedJobForExecution] = useState<Job | null>(null)
+  const [executionChecklist, setExecutionChecklist] = useState<string[]>([])
+  const [executionNotes, setExecutionNotes] = useState('')
 
-  // Get unique clients from quotations data
-  const availableClients = useMemo(() => {
-    const quotations = getQuotations()
-    const clientMap = new Map()
-    
-    quotations.forEach(quote => {
-      if (quote.client && !clientMap.has(quote.client.id)) {
-        clientMap.set(quote.client.id, quote.client)
-      }
-    })
-    
-    return Array.from(clientMap.values())
-  }, [])
-
-  const [jobTemplates] = useState([
-    {
-      id: 1,
-      name: 'Office Deep Cleaning',
-      description: 'Complete office cleaning including desks, floors, and common areas',
-      category: 'Office',
-      data: {
-        priority: 'High',
-        riskLevel: 'Low',
-        teamRequired: 3,
-        estimatedDuration: '4 hours',
-        budget: 1500,
-        requiredSkills: ['General Cleaning', 'Floor Care']
-      }
-    },
-    {
-      id: 2,
-      name: 'Medical Facility Sanitization',
-      description: 'Specialized cleaning for healthcare facilities with sanitization protocols',
-      category: 'Medical',
-      data: {
-        priority: 'Critical',
-        riskLevel: 'High',
-        teamRequired: 5,
-        estimatedDuration: '6 hours',
-        budget: 3000,
-        requiredSkills: ['Medical Cleaning', 'Sanitization']
-      }
-    },
-    {
-      id: 3,
-      name: 'Carpet Cleaning',
-      description: 'Deep carpet cleaning and maintenance service',
-      category: 'Specialized',
-      data: {
-        priority: 'Medium',
-        riskLevel: 'Low',
-        teamRequired: 2,
-        estimatedDuration: '3 hours',
-        budget: 800,
-        requiredSkills: ['Carpet Cleaning']
-      }
-    }
-  ])
-
-  // New job form state
-  const [newJob, setNewJob] = useState<NewJob>({
+  const [newJobForm, setNewJobForm] = useState<NewJobForm>({
     title: '',
     client: '',
     clientId: null,
     priority: 'Medium',
     scheduledDate: '',
+    scheduledTime: '',
+    endTime: '',
     location: '',
     teamRequired: 1,
     budget: 0,
     description: '',
     riskLevel: 'Low',
-    scheduledTime: '',
-    endTime: '',
     slaDeadline: '',
     estimatedDuration: '',
-    requiredSkills: [],
-    permits: [],
-    tags: [],
+    requiredSkills: '',
+    permits: '',
+    tags: '',
     specialInstructions: '',
     recurring: false
   })
 
-  // Filter jobs based on search and filters
+  // Calculate statistics
+  const stats = useMemo(() => ({
+    total: jobs.length,
+    pending: jobs.filter(j => j.status === 'Pending').length,
+    scheduled: jobs.filter(j => j.status === 'Scheduled').length,
+    inProgress: jobs.filter(j => j.status === 'In Progress').length,
+    completed: jobs.filter(j => j.status === 'Completed').length,
+    totalBudget: jobs.reduce((sum, j) => sum + j.budget, 0),
+    totalActualCost: jobs.reduce((sum, j) => sum + j.actualCost, 0),
+    critical: jobs.filter(j => j.priority === 'Critical').length
+  }), [jobs])
+
+  // Filter jobs
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -201,133 +287,214 @@ function JobBoardContent() {
     })
   }, [jobs, searchTerm, statusFilter, priorityFilter])
 
-  // SLA Breach prediction
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'Critical':
-        return 'bg-red-100 text-red-700'
-      case 'High':
-        return 'bg-orange-100 text-orange-700'
-      case 'Medium':
-        return 'bg-yellow-100 text-yellow-700'
-      default:
-        return 'bg-blue-100 text-blue-700'
+      case 'Critical': return 'bg-red-100 text-red-800 border-red-300'
+      case 'High': return 'bg-orange-100 text-orange-800 border-orange-300'
+      case 'Medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+      default: return 'bg-blue-100 text-blue-800 border-blue-300'
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed':
-        return 'bg-green-100 text-green-700'
-      case 'In Progress':
-        return 'bg-blue-100 text-blue-700'
-      case 'Scheduled':
-        return 'bg-purple-100 text-purple-700'
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-700'
-      default:
-        return 'bg-gray-100 text-gray-700'
+      case 'Completed': return 'bg-green-100 text-green-800 border-green-300'
+      case 'In Progress': return 'bg-blue-100 text-blue-800 border-blue-300'
+      case 'Scheduled': return 'bg-purple-100 text-purple-800 border-purple-300'
+      case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+      case 'Cancelled': return 'bg-gray-100 text-gray-800 border-gray-300'
+      default: return 'bg-gray-100 text-gray-800 border-gray-300'
     }
   }
 
-  const applyTemplate = (template: any) => {
-    // Apply template logic
-    setShowTemplates(false)
-  }
-
-  const handleClientSelect = (client: any) => {
-    setNewJob(prev => ({ ...prev, client: client.name, clientId: client.id }))
-    setShowClientList(false)
-  }
-
-  const handleClientClick = () => {
-    setShowClientList(true)
-  }
-  
-  const handleAddJob = useCallback(() => {
-    setNewJob({
+  const handleAddJob = () => {
+    setNewJobForm({
       title: '',
       client: '',
       clientId: null,
       priority: 'Medium',
       scheduledDate: '',
+      scheduledTime: '',
+      endTime: '',
       location: '',
       teamRequired: 1,
       budget: 0,
       description: '',
       riskLevel: 'Low',
-      scheduledTime: '',
-      endTime: '',
       slaDeadline: '',
       estimatedDuration: '',
-      requiredSkills: [],
-      permits: [],
-      tags: [],
+      requiredSkills: '',
+      permits: '',
+      tags: '',
       specialInstructions: '',
       recurring: false
     })
-    setShowNewJob(true)
-  }, [])
+    setShowNewJobModal(true)
+  }
 
   const handleSaveJob = useCallback(() => {
-    if (!newJob.title || !newJob.client || !newJob.location) {
-      alert('Please fill in all required fields')
+    if (!newJobForm.title || !newJobForm.client || !newJobForm.location) {
+      alert('Please fill in all required fields: Title, Client, and Location')
       return
     }
 
-    const job = {
-      id: Math.max(...jobs.map(j => j.id)) + 1,
-      ...newJob,
-      status: 'Pending'
+    try {
+      const newJob: Job = {
+        id: Math.max(...jobs.map(j => j.id), 0) + 1,
+        title: newJobForm.title,
+        client: newJobForm.client,
+        clientId: newJobForm.clientId || 0,
+        status: 'Pending',
+        priority: newJobForm.priority,
+        scheduledDate: newJobForm.scheduledDate || null,
+        scheduledTime: newJobForm.scheduledTime,
+        endTime: newJobForm.endTime,
+        location: newJobForm.location,
+        teamRequired: newJobForm.teamRequired,
+        budget: newJobForm.budget,
+        actualCost: 0,
+        description: newJobForm.description,
+        riskLevel: newJobForm.riskLevel,
+        slaDeadline: newJobForm.slaDeadline,
+        estimatedDuration: newJobForm.estimatedDuration,
+        requiredSkills: newJobForm.requiredSkills.split(',').map(s => s.trim()).filter(s => s),
+        permits: newJobForm.permits.split(',').map(s => s.trim()).filter(s => s),
+        tags: newJobForm.tags.split(',').map(s => s.trim()).filter(s => s),
+        specialInstructions: newJobForm.specialInstructions,
+        recurring: newJobForm.recurring,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        executionLogs: [],
+        assignedTo: [],
+        reminderEnabled: false,
+        reminderDate: undefined,
+        reminderSent: false
+      }
+
+      setJobs([...jobs, newJob])
+      setShowNewJobModal(false)
+      alert('Job created successfully!')
+    } catch (error) {
+      alert('Error creating job. Please try again.')
     }
+  }, [newJobForm, jobs])
 
-    setJobs([...jobs, job])
-    setShowNewJob(false)
-    alert('Job created successfully!')
-  }, [newJob, jobs])
-
-  const updateJobStatus = useCallback((jobId: number, newStatus: string) => {
-    setJobs(jobs.map(job =>
-      job.id === jobId ? { ...job, status: newStatus, lastUpdated: new Date().toISOString() } : job
-    ))
+  const handleToggleReminder = useCallback((jobId: number) => {
+    setJobs(jobs.map(j => {
+      if (j.id === jobId && j.scheduledDate) {
+        const reminderDate = new Date(j.scheduledDate + 'T00:00:00')
+        reminderDate.setDate(reminderDate.getDate() - 1)
+        return {
+          ...j,
+          reminderEnabled: !j.reminderEnabled,
+          reminderDate: reminderDate.toISOString().split('T')[0]
+        }
+      }
+      return j
+    }))
   }, [jobs])
 
-  const handleOnSiteExecution = useCallback((job: any) => {
+  const handleUpdateJobStatus = useCallback((jobId: number, newStatus: Job['status']) => {
+    setJobs(jobs.map(j =>
+      j.id === jobId
+        ? { ...j, status: newStatus, updatedAt: new Date().toISOString() }
+        : j
+    ))
+    alert(`Job status updated to ${newStatus}`)
+  }, [jobs])
+
+  const handleDeleteJob = useCallback((jobId: number) => {
+    if (window.confirm('Are you sure you want to delete this job?')) {
+      setJobs(jobs.filter(j => j.id !== jobId))
+      alert('Job deleted successfully')
+    }
+  }, [jobs])
+
+  const handleStartExecution = (job: Job) => {
     setSelectedJobForExecution(job)
-    setShowExecution(true)
-  }, [])
+    setExecutionChecklist([])
+    setExecutionNotes('')
+    setShowExecutionModal(true)
+  }
+
+  const handleLogExecution = () => {
+    if (!selectedJobForExecution) return
+    handleUpdateJobStatus(selectedJobForExecution.id, 'In Progress')
+    setShowExecutionModal(false)
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header with Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">Job Management</h1>
-          <p className="text-muted-foreground">Manage and track cleaning jobs</p>
+    <div className="space-y-6 pb-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Management</h1>
+        <p className="text-gray-600">Manage, track, and execute cleaning jobs in real-time</p>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium">Total Jobs</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
+            </div>
+            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Briefcase className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleAddJob}
-            className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-lg font-medium hover:bg-pink-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New Job
-          </button>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium">In Progress</p>
+              <p className="text-3xl font-bold text-blue-600 mt-2">{stats.inProgress}</p>
+            </div>
+            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Clock className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium">Completed</p>
+              <p className="text-3xl font-bold text-green-600 mt-2">{stats.completed}</p>
+            </div>
+            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium">Budget Utilization</p>
+              <p className="text-2xl font-bold text-orange-600 mt-2">
+                {stats.totalBudget > 0 ? ((stats.totalActualCost / stats.totalBudget) * 100).toFixed(0) : '0'}%
+              </p>
+            </div>
+            <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-orange-600" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Search & Filters with Bulk Operations */}
-      <div className="bg-card border rounded-lg p-4">
+      {/* Search & Filters */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search jobs by title, client, location, skills, or tags..."
-              className="w-full pl-10 pr-3 py-2 bg-muted border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
+              placeholder="Search by job title, client, or location..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             />
           </div>
 
@@ -335,7 +502,7 @@ function JobBoardContent() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 bg-muted border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value="all">All Status</option>
               <option value="Pending">Pending</option>
@@ -347,14 +514,22 @@ function JobBoardContent() {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-3 py-2 bg-muted border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value="all">All Priority</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
               <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Critical">Critical</option>
             </select>
+
+            <button
+              onClick={handleAddJob}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Job
+            </button>
           </div>
         </div>
       </div>
@@ -362,668 +537,543 @@ function JobBoardContent() {
       {/* Jobs List */}
       <div className="space-y-3">
         {filteredJobs.length > 0 ? (
-          filteredJobs.map((job) => {
-            return (
-              <div key={job.id} className="bg-card border rounded-lg p-4 hover:border-pink-600 hover:shadow-md transition-all">
-                <div className="flex items-start gap-4">
-                  {/* Job Content */}
-                  <div className="flex-1">
-                    <Link href={`/admin/jobs/${job.id}`}>
-                      <div className="cursor-pointer">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-bold text-sm">{job.title}</h3>
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getPriorityColor(job.priority)}`}>
-                                {job.priority}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground hover:text-blue-600 hover:underline">
-                              {job.client}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs font-bold px-3 py-1 rounded-full ${getStatusColor(job.status)}`}>
-                              {job.status}
-                            </span>
-                          </div>
+          filteredJobs.map((job) => (
+            <div key={job.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <Link href={`/admin/jobs/${job.id}`}>
+                    <div className="cursor-pointer group mb-3">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {job.title}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">{job.client}</p>
                         </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-xs">
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            {job.location}
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {job.scheduledDate ? new Date(job.scheduledDate).toLocaleDateString() : 'Unscheduled'}
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Users className="h-3 w-3" />
-                            Team: {job.teamRequired}
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <DollarSign className="h-3 w-3" />
-                            AED {job.budget.toLocaleString()}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs font-bold px-2 py-1 rounded ${getPriorityColor(job.priority)}`}>
-                              {job.priority}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {job.status === 'Pending' ? (
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  updateJobStatus(job.id, 'Scheduled')
-                                }}
-                                className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
-                              >
-                                Schedule
-                              </button>
-                            ) : job.status === 'Scheduled' ? (
-                              <>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    updateJobStatus(job.id, 'In Progress')
-                                  }}
-                                  className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                                >
-                                  Start
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    handleOnSiteExecution(job)
-                                  }}
-                                  className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 flex items-center gap-1"
-                                >
-                                  <Play className="h-3 w-3" />
-                                  Execute
-                                </button>
-                              </>
-                            ) : job.status === 'In Progress' ? (
-                              <>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    updateJobStatus(job.id, 'Completed')
-                                  }}
-                                  className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
-                                >
-                                  Complete
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    handleOnSiteExecution(job)
-                                  }}
-                                  className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 flex items-center gap-1"
-                                >
-                                  <Camera className="h-3 w-3" />
-                                  On Site
-                                </button>
-                              </>
-                            ) : null}
-                          </div>
+                        <div className="flex gap-2">
+                          <span className={`text-xs font-bold px-3 py-1 border rounded-full ${getPriorityColor(job.priority)}`}>
+                            {job.priority}
+                          </span>
+                          <span className={`text-xs font-bold px-3 py-1 border rounded-full ${getStatusColor(job.status)}`}>
+                            {job.status}
+                          </span>
                         </div>
                       </div>
-                    </Link>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 flex-shrink-0" />
+                          <span>{job.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 flex-shrink-0" />
+                          <span>{job.scheduledDate ? new Date(job.scheduledDate + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) : 'Not scheduled'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 flex-shrink-0" />
+                          <span>{job.teamRequired} members</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 flex-shrink-0" />
+                          <span>AED {job.budget.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {job.description && (
+                        <p className="text-sm text-gray-600 line-clamp-2">{job.description}</p>
+                      )}
+                    </div>
+                  </Link>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-100">
+                    {job.status === 'Pending' && (
+                      <>
+                        <button
+                          onClick={() => handleUpdateJobStatus(job.id, 'Scheduled')}
+                          className="text-xs px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors font-medium"
+                        >
+                          Schedule
+                        </button>
+                        <button
+                          onClick={() => handleDeleteJob(job.id)}
+                          className="text-xs px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Delete
+                        </button>
+                      </>
+                    )}
+
+                    {(job.status === 'Scheduled' || job.status === 'In Progress') && (
+                      <button
+                        onClick={() => handleToggleReminder(job.id)}
+                        className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1 ${
+                          job.reminderEnabled
+                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {job.reminderEnabled ? (
+                          <>
+                            <Bell className="h-3 w-3" />
+                            Reminder Set
+                          </>
+                        ) : (
+                          <>
+                            <BellOff className="h-3 w-3" />
+                            Set Reminder
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {job.reminderEnabled && job.reminderDate && (
+                      <div className="text-xs px-2 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg border border-yellow-200 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Reminder: {new Date(job.reminderDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    )}
+
+                    {job.status === 'Scheduled' && (
+                      <>
+                        <button
+                          onClick={() => handleStartExecution(job)}
+                          className="text-xs px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors font-medium flex items-center gap-1"
+                        >
+                          <Play className="h-3 w-3" />
+                          Execute
+                        </button>
+                        <button
+                          onClick={() => handleUpdateJobStatus(job.id, 'In Progress')}
+                          className="text-xs px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium"
+                        >
+                          Start
+                        </button>
+                      </>
+                    )}
+
+                    {job.status === 'In Progress' && (
+                      <>
+                        <button
+                          onClick={() => handleStartExecution(job)}
+                          className="text-xs px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors font-medium flex items-center gap-1"
+                        >
+                          <Camera className="h-3 w-3" />
+                          On Site
+                        </button>
+                        <button
+                          onClick={() => handleUpdateJobStatus(job.id, 'Completed')}
+                          className="text-xs px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-1"
+                        >
+                          <CheckCircle className="h-3 w-3" />
+                          Complete
+                        </button>
+                      </>
+                    )}
+
+                    {job.status !== 'Completed' && (
+                      <Link href={`/admin/jobs/${job.id}`}>
+                        <button className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          Details
+                        </button>
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
-            )
-          })
+            </div>
+          ))
         ) : (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
             <Briefcase className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-lg font-medium">No jobs found</p>
-            <p className="text-sm">Try adjusting your filters or create a new job</p>
+            <p className="text-lg font-medium text-gray-900">No jobs found</p>
+            <p className="text-sm text-gray-600">Try adjusting your filters or create a new job</p>
           </div>
         )}
       </div>
 
-      {/* Job Templates Modal */}
-      {showTemplates && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Job Templates</h2>
-                <button
-                  onClick={() => setShowTemplates(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {jobTemplates.map((template) => (
-                  <div key={template.id} className="border rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{template.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{template.description}</p>
-                      </div>
-                      <button
-                        onClick={() => applyTemplate(template)}
-                        className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        Use Template
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div><strong>Priority:</strong> {template.data.priority}</div>
-                      <div><strong>Risk:</strong> {template.data.riskLevel}</div>
-                      <div><strong>Team Size:</strong> {template.data.teamRequired}</div>
-                      <div><strong>Duration:</strong> {template.data.estimatedDuration}</div>
-                      <div><strong>Budget:</strong> AED {template.data.budget.toLocaleString()}</div>
-                      <div><strong>Skills:</strong> {template.data.requiredSkills.join(', ')}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setShowTemplates(false)}
-                  className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* New Job Modal */}
-      {showNewJob && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
+      {/* New Job Side Panel */}
+      {showNewJobModal && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowNewJobModal(false)}></div>
+          <div className="absolute right-0 top-0 h-full w-full max-w-2xl bg-white shadow-2xl flex flex-col">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex justify-between items-center">
+              <div>
                 <h2 className="text-2xl font-bold">Create New Job</h2>
-                <button
-                  onClick={() => setShowNewJob(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
+                <p className="text-blue-100 text-sm mt-1">Complete all job details</p>
               </div>
-
-              <div className="space-y-6">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Basic Information</h3>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Job Title *</label>
-                      <input
-                        type="text"
-                        value={newJob.title}
-                        onChange={(e) => setNewJob({...newJob, title: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                        placeholder="Enter job title"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Choose Client *</label>
-                      <div className="flex gap-2">
-                        <select
-                          value={newJob.client}
-                          onChange={(e) => setNewJob({...newJob, client: e.target.value})}
-                          className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                        >
-                          <option value="">Select a client</option>
-                          {availableClients.map((client) => (
-                            <option key={client.id} value={client.name}>
-                              {client.name} - {client.company} ({client.tier})
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={handleClientClick}
-                          className="px-3 py-2 bg-gray-100 border rounded-lg hover:bg-gray-200 text-gray-600 text-sm"
-                          title="Browse all clients"
-                        >
-                          Browse
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Description</label>
-                    <textarea
-                      value={newJob.description}
-                      onChange={(e) => setNewJob({...newJob, description: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      rows={3}
-                      placeholder="Job description and requirements"
-                    />
-                  </div>
-                </div>
-
-                {/* Scheduling & Priority */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Scheduling & Priority</h3>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Priority</label>
-                      <select
-                        value={newJob.priority}
-                        onChange={(e) => setNewJob({...newJob, priority: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                        <option value="Critical">Critical</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Risk Level</label>
-                      <select
-                        value={newJob.riskLevel}
-                        onChange={(e) => setNewJob({...newJob, riskLevel: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="critical">Critical</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Scheduled Date</label>
-                      <input
-                        type="date"
-                        value={newJob.scheduledDate}
-                        onChange={(e) => setNewJob({...newJob, scheduledDate: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Start Time</label>
-                      <input
-                        type="time"
-                        value={newJob.scheduledTime}
-                        onChange={(e) => setNewJob({...newJob, scheduledTime: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">End Time</label>
-                      <input
-                        type="time"
-                        value={newJob.endTime}
-                        onChange={(e) => setNewJob({...newJob, endTime: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">SLA Deadline</label>
-                      <input
-                        type="date"
-                        value={newJob.slaDeadline}
-                        onChange={(e) => setNewJob({...newJob, slaDeadline: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Estimated Duration</label>
-                      <input
-                        type="text"
-                        value={newJob.estimatedDuration}
-                        onChange={(e) => setNewJob({...newJob, estimatedDuration: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                        placeholder="e.g., 8 hours"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Location & Resources */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Location & Resources</h3>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Location *</label>
-                      <input
-                        type="text"
-                        value={newJob.location}
-                        onChange={(e) => setNewJob({...newJob, location: e.target.value})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                        placeholder="Enter location"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Team Required</label>
-                      <input
-                        type="number"
-                        value={newJob.teamRequired}
-                        onChange={(e) => setNewJob({...newJob, teamRequired: parseInt(e.target.value) || 1})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                        min="1"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Required Skills</label>
-                    <input
-                      type="text"
-                      value={newJob.requiredSkills.join(', ')}
-                      onChange={(e) => setNewJob({...newJob, requiredSkills: e.target.value.split(',').map(s => s.trim()).filter(s => s)})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      placeholder="e.g., Floor Cleaning, Window Cleaning, Safety Certification"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Permits Required</label>
-                    <input
-                      type="text"
-                      value={newJob.permits.join(', ')}
-                      onChange={(e) => setNewJob({...newJob, permits: e.target.value.split(',').map(s => s.trim()).filter(s => s)})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      placeholder="e.g., Building Access Pass, Biohazard Permit"
-                    />
-                  </div>
-                </div>
-
-                {/* Budget & Additional */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Budget & Additional</h3>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Budget (AED)</label>
-                      <input
-                        type="number"
-                        value={newJob.budget}
-                        onChange={(e) => setNewJob({...newJob, budget: parseInt(e.target.value) || 0})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                        min="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Tags</label>
-                      <input
-                        type="text"
-                        value={newJob.tags.join(', ')}
-                        onChange={(e) => setNewJob({...newJob, tags: e.target.value.split(',').map(s => s.trim()).filter(s => s)})}
-                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                        placeholder="e.g., office, deep-cleaning, urgent"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Special Instructions</label>
-                    <textarea
-                      value={newJob.specialInstructions}
-                      onChange={(e) => setNewJob({...newJob, specialInstructions: e.target.value})}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 outline-none"
-                      rows={2}
-                      placeholder="Any special instructions or notes"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={newJob.recurring}
-                        onChange={(e) => setNewJob({...newJob, recurring: e.target.checked})}
-                        className="rounded"
-                      />
-                      <span className="text-sm">Recurring Job</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setShowNewJob(false)}
-                  className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveJob}
-                  className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
-                >
-                  Create Job
-                </button>
-              </div>
+              <button onClick={() => setShowNewJobModal(false)} className="text-blue-100 hover:text-white transition-colors">
+                <X className="h-6 w-6" />
+              </button>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* Client List Modal */}
-      {showClientList && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Select Client</h2>
-                <button
-                  onClick={() => setShowClientList(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4 border-b pb-6">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-blue-600" />
+                  Basic Information
+                </h3>
 
-              <div className="space-y-3">
-                {availableClients.length > 0 ? (
-                  availableClients.map((client) => (
-                    <div
-                      key={client.id}
-                      onClick={() => handleClientSelect(client)}
-                      className="p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors"
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Job Title *</label>
+                    <input
+                      type="text"
+                      value={newJobForm.title}
+                      onChange={(e) => setNewJobForm({...newJobForm, title: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="e.g., Office Deep Cleaning"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Client *</label>
+                    <select
+                      value={newJobForm.clientId || ''}
+                      onChange={(e) => {
+                        const selected = AVAILABLE_CLIENTS.find(c => c.id === parseInt(e.target.value))
+                        setNewJobForm({
+                          ...newJobForm,
+                          clientId: selected?.id || null,
+                          client: selected?.name || ''
+                        })
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <User className="h-4 w-4 text-gray-400" />
-                            <h3 className="font-medium text-gray-900">{client.name}</h3>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              client.tier === 'Platinum' ? 'bg-purple-100 text-purple-700' :
-                              client.tier === 'Gold' ? 'bg-yellow-100 text-yellow-700' :
-                              client.tier === 'Silver' ? 'bg-gray-100 text-gray-700' :
-                              'bg-orange-100 text-orange-700'
-                            }`}>
-                              {client.tier}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600">{client.company}</p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                            <span>📧 {client.email}</span>
-                            <span>📱 {client.phone}</span>
-                            <span>📍 {client.location}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <User className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p>No clients available</p>
+                      <option value="">Select a client</option>
+                      {AVAILABLE_CLIENTS.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Description *</label>
+                  <textarea
+                    value={newJobForm.description}
+                    onChange={(e) => setNewJobForm({...newJobForm, description: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    rows={3}
+                    placeholder="Detailed job description..."
+                  />
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  onClick={() => setShowClientList(false)}
-                  className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
+              {/* Location & Priority */}
+              <div className="space-y-4 border-b pb-6">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-600" />
+                  Location & Priority
+                </h3>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Location *</label>
+                  <input
+                    type="text"
+                    value={newJobForm.location}
+                    onChange={(e) => setNewJobForm({...newJobForm, location: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Enter job location"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Priority *</label>
+                    <select
+                      value={newJobForm.priority}
+                      onChange={(e) => setNewJobForm({...newJobForm, priority: e.target.value as any})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Risk Level *</label>
+                    <select
+                      value={newJobForm.riskLevel}
+                      onChange={(e) => setNewJobForm({...newJobForm, riskLevel: e.target.value as any})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                  </div>
+                </div>
               </div>
+
+              {/* Scheduling */}
+              <div className="space-y-4 border-b pb-6">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                  Scheduling
+                </h3>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Scheduled Date</label>
+                  <input
+                    type="date"
+                    value={newJobForm.scheduledDate}
+                    onChange={(e) => setNewJobForm({...newJobForm, scheduledDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Start Time</label>
+                    <input
+                      type="time"
+                      value={newJobForm.scheduledTime}
+                      onChange={(e) => setNewJobForm({...newJobForm, scheduledTime: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">End Time</label>
+                    <input
+                      type="time"
+                      value={newJobForm.endTime}
+                      onChange={(e) => setNewJobForm({...newJobForm, endTime: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Estimated Duration</label>
+                    <input
+                      type="text"
+                      value={newJobForm.estimatedDuration}
+                      onChange={(e) => setNewJobForm({...newJobForm, estimatedDuration: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      placeholder="e.g., 8 hours"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">SLA Deadline</label>
+                    <input
+                      type="date"
+                      value={newJobForm.slaDeadline}
+                      onChange={(e) => setNewJobForm({...newJobForm, slaDeadline: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Resources & Budget */}
+              <div className="space-y-4 border-b pb-6">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  Resources & Budget
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Team Size Required *</label>
+                    <input
+                      type="number"
+                      value={newJobForm.teamRequired}
+                      onChange={(e) => setNewJobForm({...newJobForm, teamRequired: parseInt(e.target.value) || 1})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">Budget (AED) *</label>
+                    <input
+                      type="number"
+                      value={newJobForm.budget}
+                      onChange={(e) => setNewJobForm({...newJobForm, budget: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Required Skills</label>
+                  <textarea
+                    value={newJobForm.requiredSkills}
+                    onChange={(e) => setNewJobForm({...newJobForm, requiredSkills: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    rows={2}
+                    placeholder="Enter skills separated by comma. e.g., General Cleaning, Floor Care"
+                  />
+                </div>
+              </div>
+
+              {/* Permits & Compliance */}
+              <div className="space-y-4 border-b pb-6">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
+                  Permits & Compliance
+                </h3>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Required Permits</label>
+                  <textarea
+                    value={newJobForm.permits}
+                    onChange={(e) => setNewJobForm({...newJobForm, permits: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    rows={2}
+                    placeholder="Enter permits separated by comma. e.g., Building Access, Safety Certificate"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Job Tags</label>
+                  <textarea
+                    value={newJobForm.tags}
+                    onChange={(e) => setNewJobForm({...newJobForm, tags: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    rows={2}
+                    placeholder="Enter tags separated by comma. e.g., Office, Commercial, Urgent"
+                  />
+                </div>
+              </div>
+
+              {/* Special Instructions */}
+              <div className="space-y-4 border-b pb-6">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  Special Instructions
+                </h3>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Special Instructions</label>
+                  <textarea
+                    value={newJobForm.specialInstructions}
+                    onChange={(e) => setNewJobForm({...newJobForm, specialInstructions: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    rows={3}
+                    placeholder="Any special instructions or notes for this job..."
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <input
+                    type="checkbox"
+                    checked={newJobForm.recurring}
+                    onChange={(e) => setNewJobForm({...newJobForm, recurring: e.target.checked})}
+                    className="w-4 h-4 rounded"
+                    id="recurring"
+                  />
+                  <label htmlFor="recurring" className="text-sm font-medium text-gray-900 cursor-pointer">
+                    This is a recurring job
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons - Fixed Bottom */}
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+              <button
+                onClick={() => setShowNewJobModal(false)}
+                className="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveJob}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Job
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* On Site Job Execution Modal */}
-      {showExecution && selectedJobForExecution && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white border border-gray-300 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-300 bg-linear-to-r from-orange-50 to-red-50">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center border border-orange-300">
-                  <Play className="h-5 w-5 text-orange-700" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-gray-900">On Site Job Execution</h2>
-                  <p className="text-sm text-gray-600">{selectedJobForExecution.title}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowExecution(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <X className="h-5 w-5" />
+      {/* Execution Modal */}
+      {showExecutionModal && selectedJobForExecution && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Execute: {selectedJobForExecution.title}</h2>
+              <button onClick={() => setShowExecutionModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="h-6 w-6" />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
               {/* Job Details */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Job Details</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Client:</span>
-                    <span className="ml-2 font-medium">{selectedJobForExecution.client}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Location:</span>
-                    <span className="ml-2 font-medium">{selectedJobForExecution.location}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Team Size:</span>
-                    <span className="ml-2 font-medium">{selectedJobForExecution.teamRequired} members</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Status:</span>
-                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-bold ${getStatusColor(selectedJobForExecution.status)}`}>
-                      {selectedJobForExecution.status}
-                    </span>
-                  </div>
+                  <div><span className="text-gray-600">Client: </span><span className="font-semibold">{selectedJobForExecution.client}</span></div>
+                  <div><span className="text-gray-600">Location: </span><span className="font-semibold">{selectedJobForExecution.location}</span></div>
+                  <div><span className="text-gray-600">Team Size: </span><span className="font-semibold">{selectedJobForExecution.teamRequired}</span></div>
+                  <div><span className="text-gray-600">Budget: </span><span className="font-semibold">AED {selectedJobForExecution.budget.toLocaleString()}</span></div>
                 </div>
               </div>
 
-              {/* Execution Checklist */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Execution Checklist</h3>
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3 p-3 bg-white border rounded-lg hover:bg-gray-50">
-                    <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Team arrived on site</span>
+              {/* Checklist */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-900">Pre-Execution Checklist</h3>
+                {['Team arrived on site', 'Equipment setup', 'Safety review', 'Client briefing', 'Work area secured', 'Permits verified'].map(item => (
+                  <label key={item} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={executionChecklist.includes(item)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setExecutionChecklist([...executionChecklist, item])
+                        } else {
+                          setExecutionChecklist(executionChecklist.filter(i => i !== item))
+                        }
+                      }}
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm">{item}</span>
                   </label>
-                  <label className="flex items-center gap-3 p-3 bg-white border rounded-lg hover:bg-gray-50">
-                    <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Equipment setup completed</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 bg-white border rounded-lg hover:bg-gray-50">
-                    <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Safety protocols reviewed</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 bg-white border rounded-lg hover:bg-gray-50">
-                    <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Client briefing completed</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 bg-white border rounded-lg hover:bg-gray-50">
-                    <input type="checkbox" className="rounded" />
-                    <span className="text-sm">Work area secured</span>
-                  </label>
+                ))}
+              </div>
+
+              {/* Photos */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-900">Documentation</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {['Before', 'During', 'After'].map(label => (
+                    <div key={label} className="aspect-square bg-gray-100 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500">
+                      <Camera className="h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-xs text-gray-600">{label}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Image Documentation */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Image Documentation</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {/* Placeholder for images */}
-                  <div className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-xs text-gray-500">Before Work</p>
-                    </div>
-                  </div>
-                  <div className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-xs text-gray-500">In Progress</p>
-                    </div>
-                  </div>
-                  <div className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <Camera className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-xs text-gray-500">After Work</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                </div>
-              </div>
-
-              {/* Progress Notes */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-4">Progress Notes</h3>
+              {/* Notes */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-900">Notes</h3>
                 <textarea
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  value={executionNotes}
+                  onChange={(e) => setExecutionNotes(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                   rows={4}
-                  placeholder="Add notes about the job execution progress..."
-                ></textarea>
+                  placeholder="Add notes..."
+                />
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <button
-                  onClick={() => setShowExecution(false)}
-                  className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
-                >
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-6 border-t">
+                <button onClick={() => setShowExecutionModal(false)} className="px-4 py-2 text-gray-700 border rounded-lg hover:bg-gray-50">
                   Cancel
                 </button>
-                <button
-                  onClick={() => {
-                    // Handle execution completion
-                    setShowExecution(false)
-                    alert('Execution logged successfully!')
-                  }}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
-                >
+                <button onClick={handleLogExecution} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
                   Log Execution
                 </button>
               </div>
@@ -1032,17 +1082,5 @@ function JobBoardContent() {
         </div>
       )}
     </div>
-  )
-}
-
-export default function JobBoard() {
-  return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    }>
-      <JobBoardContent />
-    </Suspense>
   )
 }
