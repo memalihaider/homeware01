@@ -1,0 +1,37 @@
+<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="200" fill="none"/>
+  
+  <!-- Left Sparkles -->
+  <g id="sparkle-left">
+    <circle cx="50" cy="40" r="4" fill="#60A5FA" opacity="0.8"/>
+    <circle cx="70" cy="60" r="3" fill="#93C5FD" opacity="0.6"/>
+  </g>
+  
+  <!-- Main Star/Diamond Shape -->
+  <g id="main-star">
+    <!-- Center diamond in pink -->
+    <path d="M 120 30 L 145 70 L 120 110 L 95 70 Z" fill="#DB2777" opacity="0.95"/>
+    
+    <!-- Outer sparkle points -->
+    <path d="M 120 15 L 130 35 L 120 55 L 110 35 Z" fill="#DB2777" opacity="0.7"/>
+    <path d="M 155 70 L 175 80 L 155 90 L 135 80 Z" fill="#DB2777" opacity="0.7"/>
+    <path d="M 85 70 L 65 80 L 85 90 L 105 80 Z" fill="#DB2777" opacity="0.7"/>
+  </g>
+  
+  <!-- Right Sparkles -->
+  <g id="sparkle-right">
+    <circle cx="330" cy="50" r="4" fill="#60A5FA" opacity="0.8"/>
+    <circle cx="360" cy="70" r="3" fill="#93C5FD" opacity="0.6"/>
+  </g>
+  
+  <!-- Text: HOMEWORK -->
+  <text x="200" y="90" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="#DB2777" text-anchor="middle" letter-spacing="2">
+    HOMEWORK
+  </text>
+  
+  <!-- Text: HYGIENE -->
+  <text x="200" y="140" font-family="Arial, sans-serif" font-size="36" font-weight="900" fill="#3B82F6" text-anchor="middle" letter-spacing="1">
+    HYGIENE
+  </text>
+</svg>

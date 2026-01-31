@@ -1,3 +1,5 @@
+"use client"
+
 import { ReactNode } from 'react'
 import { 
   Phone, Mail, Facebook, Linkedin, Instagram, MessageCircle, ChevronDown,
@@ -10,6 +12,25 @@ import {
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-white text-slate-900 transition-colors duration-300">
+      {/* Premium Font Imports */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
+        
+        :root {
+          --font-poppins: 'Poppins', sans-serif;
+          --font-playfair: 'Playfair Display', serif;
+        }
+        
+        body {
+          font-family: var(--font-poppins);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+          font-family: var(--font-playfair);
+          letter-spacing: -0.02em;
+        }
+      `}</style>
+
       {/* Top Bar - Enhanced */}
       <div className="bg-gradient-to-r from-primary via-primary to-pink-700 text-white py-3 hidden md:block border-b border-white/10">
         <div className="container mx-auto px-4 flex justify-between items-center text-xs font-bold">
@@ -42,12 +63,13 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 bg-white/90 backdrop-blur-xl shadow-lg shadow-slate-200/50">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
           <a href="/" className="flex items-center gap-3 group">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-pink-700 flex items-center justify-center text-white font-black text-2xl shadow-xl shadow-primary/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-              H
-            </div>
-            <div className="flex flex-col">
-              <span className="text-2xl font-black tracking-tight text-slate-900 leading-none">HOMEWORK</span>
-              <span className="text-[11px] font-black tracking-[0.25em] text-primary leading-none mt-1.5">UAE CLEANING</span>
+            <div className="relative h-12 w-auto overflow-hidden group-hover:scale-105 transition-all duration-300">
+              {/* HD Logo */}
+              <img 
+                src="/logo.png" 
+                alt="HomeWork Hygiene Logo" 
+                className="h-full w-auto object-contain filter drop-shadow-sm"
+              />
             </div>
           </a>
 
